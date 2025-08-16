@@ -1,0 +1,47 @@
+server:
+  port: 20001
+
+spring:
+  datasource:
+    jdbc-url: jdbc:mysql://localhost:3306/vortexa_script_node?allowMultiQueries=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username:
+    password:
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: QuartzScheduler
+            instanceId: AUTO
+          jobStore:
+            isClustered: false
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            tablePrefix: QRTZ_BOT_TEMPLATE__
+            dataSource: botDataSource
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool
+            threadCount: 1
+            threadPriority: 5
+
+logging:
+  level:
+    org.mybatis.spring.mapper: ERROR
+    org.apache.ibatis: ERROR
+
+vortexa:
+  bot-template:
+    meta-info:
+      bot-key: agent_hub
+      bot-version: v1.0.0
+      bot-name: agent_hub_dev
+    runtime:
+      thread-pool-size: 5
+      virtual-thread: false
+    auth:
+      account:
+      account-token:
+    platform-config:
+      base-url: http://localhost:10110/vortexa_platform
+      keep-alive-interval-minutes: 1
