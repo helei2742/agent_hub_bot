@@ -12,6 +12,7 @@ import cn.com.vortexa.mail.reader.MailReader;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.ResponseBody;
 
 import javax.mail.Message;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
  * @author helei
  * @since 2025-08-17
  */
+@Slf4j
 public class AgentHubApi {
     public static final String BASE_URL = "https://hub-api.agnthub.ai/api";
     public static final String MAIL_FROM = "no-reply@mail.privy.io";
@@ -60,12 +62,16 @@ public class AgentHubApi {
 
 
     public String signInAccount(FullAccountContext fullAccountContext) throws Exception {
+        log.info("account[{}] send get check code request...", fullAccountContext.getAccount());
         sendSignInInit(fullAccountContext).get();
 
+        log.info("account[{}] get check code from email...", fullAccountContext.getAccount());
         String checkCode = getAccountCheckCode(fullAccountContext);
         if (StrUtil.isBlank(checkCode)) {
             throw new RuntimeException("get email check code failed");
         }
+        log.info("account[{}] get check code success, code: {}...", fullAccountContext.getAccount(), checkCode);
+        log.info("account[{}] send sign in request...", fullAccountContext.getAccount());
 
         Map<String, String> headers = buildHeader(fullAccountContext);
         headers.put("privy-app-id", "cm6jesuxd00a9ojo0i9rlxudk");

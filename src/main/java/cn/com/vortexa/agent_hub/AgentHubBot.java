@@ -183,15 +183,17 @@ public class AgentHubBot extends AbstractVortexaBot {
 
     private boolean tryLogin(FullAccountContext fullAccountContext) {
         try {
-            log.info("start sign in account");
+            log.info("start sign in account[{}]", fullAccountContext.getId());
             String cookie = agentHubApi.signInAccount(fullAccountContext);
             if (StrUtil.isBlank(cookie)) {
+                log.info("sign in account[{}] fail", fullAccountContext.getId());
                 return false;
             }
         } catch (Exception e) {
-            log.error("signInAccount error", e);
+            log.error("sign in account[{}] error", fullAccountContext.getId(), e);
             return false;
         }
+        log.info("sign in account[{}] success", fullAccountContext.getId());
         return true;
     }
 }
