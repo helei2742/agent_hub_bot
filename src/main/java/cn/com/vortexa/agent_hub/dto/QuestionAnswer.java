@@ -1,4 +1,4 @@
-package cn.com.vortexa.dto;
+package cn.com.vortexa.agent_hub.dto;
 
 
 import lombok.AllArgsConstructor;
