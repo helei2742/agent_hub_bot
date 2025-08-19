@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @VortexaBot(
+        namespace = "agent_hub",
+        websiteUrl = "https://quests.agnthub.ai",
         catalogueGroup = {
                 @VortexaBotCatalogueGroup(name = "每日", order = 1),
                 @VortexaBotCatalogueGroup(name = "一次性任务", order = 2),
@@ -50,12 +52,12 @@ public class AgentHubBot extends AbstractVortexaBot {
     )
     public void dailyCheckIn() {
         forEachAccountContext((pageResult, i, fullAccountContext) -> {
-            log.error("[Check In] start [{}] daily check in...", fullAccountContext.getAccount());
+            log.info("[Check In] start [{}] daily check in...", fullAccountContext.getAccount());
 
             if (!tryLogin(fullAccountContext)) return;
             try {
                 JSONObject jsonObject = agentHubApi.dailyCheckIn(fullAccountContext);
-                log.error("[Check In] [{}] daily check in complete, {}",
+                log.info("[Check In] [{}] daily check in complete, {}",
                         fullAccountContext.getAccount(), jsonObject);
             } catch (Exception e) {
                 log.error("[Check In] daily check in error, {}" , e.getMessage());
@@ -183,7 +185,9 @@ public class AgentHubBot extends AbstractVortexaBot {
 
     private boolean tryLogin(FullAccountContext fullAccountContext) {
         try {
-            log.info("start sign in account[{}]", fullAccountContext.getId());
+            log.info("start sign in account[{}], {}", fullAccountContext.getId(),
+                    fullAccountContext.getProxy() == null ? "No Proxy" : fullAccountContext.getProxy()
+            );
             String cookie = agentHubApi.signInAccount(fullAccountContext);
             if (StrUtil.isBlank(cookie)) {
                 log.info("sign in account[{}] fail", fullAccountContext.getId());

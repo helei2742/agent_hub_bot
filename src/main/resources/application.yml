@@ -5,8 +5,8 @@ spring:
   datasource:
     jdbc-url: jdbc:mysql://localhost:3306/vortexa_script_node?allowMultiQueries=true
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username:
-    password:
+    username: helei
+    password: 123456
   quartz:
     job-store-type: jdbc
     properties:
@@ -40,8 +40,8 @@ vortexa:
       thread-pool-size: 5
       virtual-thread: false
     auth:
-      account:
-      account-token:
+      account: 0x2db603e747e2db72747e5b972006f19b2d0d73a1
+      account-token: "0xfc18f58e170889ffe708a1b749f0fab6cd989d524c3f3dd8cae359893e9510927fda60f6532034f774c9a311443b4707aab5f742f2f68211a47dcbb183ed9d931b"
     platform-config:
       base-url: http://localhost:10110/vortexa_platform
       keep-alive-interval-minutes: 1

@@ -9,6 +9,7 @@ import cn.com.vortexa.common.util.CastUtil;
 import cn.com.vortexa.common.util.http.RestApiClientFactory;
 import cn.com.vortexa.mail.factory.MailReaderFactory;
 import cn.com.vortexa.mail.reader.MailReader;
+import cn.hutool.core.util.BooleanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -38,7 +39,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AgentHubApi {
     public static final String BASE_URL = "https://hub-api.agnthub.ai/api";
-    public static final String MAIL_FROM = "no-reply@mail.privy.io";
+    public static final String MAIL_FROM_1 = "no-reply@mail.privy.io";
+    public static final String MAIL_FROM_2 = "no-reply@privy.io";
     public static final Pattern V_CODE_PATTERN = Pattern.compile("\\b\\d{6}\\b");
     public static final String IMAP_PASSWORD = "imap_password";
 
@@ -62,15 +64,18 @@ public class AgentHubApi {
 
 
     public String signInAccount(FullAccountContext fullAccountContext) throws Exception {
-        log.info("account[{}] send get check code request...", fullAccountContext.getAccount());
-        sendSignInInit(fullAccountContext).get();
+        log.info("account[{}] send get check code request...", fullAccountContext.getId());
+        JSONObject initResult = sendSignInInit(fullAccountContext).get();
+        if (!BooleanUtil.isTrue(initResult.getBoolean("success"))) {
+            throw new RuntimeException("get check code request failed");
+        }
 
-        log.info("account[{}] get check code from email...", fullAccountContext.getAccount());
+        log.info("account[{}] get check code from email...", fullAccountContext.getId());
         String checkCode = getAccountCheckCode(fullAccountContext);
         if (StrUtil.isBlank(checkCode)) {
             throw new RuntimeException("get email check code failed");
         }
-        log.info("account[{}] get check code success, code: {}...", fullAccountContext.getAccount(), checkCode);
+        log.info("account[{}] get check code success, code: {}...", fullAccountContext.getId(), checkCode);
         log.info("account[{}] send sign in request...", fullAccountContext.getAccount());
 
         Map<String, String> headers = buildHeader(fullAccountContext);
@@ -120,15 +125,15 @@ public class AgentHubApi {
         AtomicReference<String> checkCode = new AtomicReference<>();
 
 
-        for (int i = 0; i < 3; i++) {
-            TimeUnit.SECONDS.sleep(5);
+        for (int i = 0; i < 10; i++) {
+            TimeUnit.SECONDS.sleep(4);
             mailReader.stoppableReadMessage(
                     fullAccountContext.getAccount(),
                     password,
                     3,
                     message -> {
                         try {
-                            if (isReceivedWithinOneMinute(message)) {
+                            if (isReceivedWithin2Minute(message)) {
                                 String code = resolveVerifierCodeFromMessage(message);
                                 checkCode.set(code);
                                 return StrUtil.isNotBlank(code);
@@ -150,7 +155,10 @@ public class AgentHubApi {
 
     private String resolveVerifierCodeFromMessage(Message message) throws MessagingException {
         boolean b = Arrays.stream(message.getFrom())
-                .anyMatch(address -> address.toString().contains(MAIL_FROM));
+                .anyMatch(address -> {
+                    String add = address.toString();
+                    return add.contains(MAIL_FROM_1) || add.contains(MAIL_FROM_2);
+                } );
         if (!b) return null;
 
         String context = MailReader.getTextFromMessage(message);
@@ -162,14 +170,14 @@ public class AgentHubApi {
         return null;
     }
 
-    private static boolean isReceivedWithinOneMinute(Message message) throws Exception {
+    private static boolean isReceivedWithin2Minute(Message message) throws Exception {
         Date receivedDate = message.getReceivedDate();
         if (receivedDate == null) {
             return false;
         }
         long now = System.currentTimeMillis();
         long diff = now - receivedDate.getTime();
-        return diff >= 0 && diff <= 60 * 1000; // 最近一分钟内
+        return diff >= 0 && diff <= 2 * 60 * 1000; // 最近一分钟内
     }
 
     private CompletableFuture<JSONObject> sendSignInInit(FullAccountContext fullAccountContext) {
